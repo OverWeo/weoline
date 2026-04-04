@@ -83,7 +83,7 @@ jobs:
 
       - name: Publish platform npm package
         working-directory: npm/${{ matrix.npm_pkg }}
-        run: npm publish --access public
+        run: npm publish --provenance --access public
 
       - name: Upload npm package artifact
         uses: actions/upload-artifact@v4
@@ -112,4 +112,4 @@ jobs:
 
       - name: Publish main npm package
         working-directory: npm/weoline
-        run: npm publish --access public
+        run: npm publish --provenance --access public
