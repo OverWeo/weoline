@@ -5,6 +5,9 @@ edition = "2024"
 license = "Apache-2.0"
 description = "Fast, cross-platform Claude Code statusline in Rust"
 repository = "https://github.com/OverWeo/weoline"
+readme = "README.md"
+keywords = ["claude", "claude-code", "statusline", "anthropic", "cli"]
+categories = ["command-line-utilities", "development-tools"]
 
 [features]
 default = ["usage-tracking"]
