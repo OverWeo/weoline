@@ -26,6 +26,12 @@ npx weoline
 pnpm add -D weoline
 ```
 
+### Cargo
+
+```bash
+cargo install weoline
+```
+
 ### Homebrew (macOS / Linux)
 
 ```bash
