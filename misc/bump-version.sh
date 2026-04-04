@@ -8,7 +8,9 @@ MAIN_PKG="$REPO_ROOT/npm/weoline/package.json"
 PLATFORM_PKGS=(
   "$REPO_ROOT/npm/weoline-darwin-arm64/package.json"
   "$REPO_ROOT/npm/weoline-darwin-x64/package.json"
+  "$REPO_ROOT/npm/weoline-linux-arm64/package.json"
   "$REPO_ROOT/npm/weoline-linux-x64/package.json"
+  "$REPO_ROOT/npm/weoline-win32-arm64/package.json"
   "$REPO_ROOT/npm/weoline-win32-x64/package.json"
 )
 
@@ -46,4 +48,4 @@ for pkg in "${PLATFORM_PKGS[@]}"; do
 done
 
 echo ""
-echo "Done. All 6 files set to $new_version."
+echo "Done. All 8 files set to $new_version."

@@ -756,7 +756,7 @@ dependencies = [
 
 [[package]]
 name = "weoline"
-version = "0.2.2"
+version = "0.3.1"
 dependencies = [
  "dirs",
  "fd-lock",

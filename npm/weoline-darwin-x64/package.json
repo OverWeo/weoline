@@ -1,6 +1,6 @@
 {
   "name": "@overweo/weoline-darwin-x64",
-  "version": "0.2.2",
+  "version": "0.3.1",
   "description": "weoline binary for macOS x64 (Intel)",
   "license": "Apache-2.0",
   "repository": {
@@ -9,6 +9,7 @@
   },
   "os": ["darwin"],
   "cpu": ["x64"],
+  "preferUnplugged": true,
   "bin": {
     "weoline": "weoline"
   }

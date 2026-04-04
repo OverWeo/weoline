@@ -1,6 +1,6 @@
 {
   "name": "@overweo/weoline-darwin-arm64",
-  "version": "0.2.2",
+  "version": "0.3.1",
   "description": "weoline binary for macOS ARM64 (Apple Silicon)",
   "license": "Apache-2.0",
   "repository": {
@@ -9,6 +9,7 @@
   },
   "os": ["darwin"],
   "cpu": ["arm64"],
+  "preferUnplugged": true,
   "bin": {
     "weoline": "weoline"
   }

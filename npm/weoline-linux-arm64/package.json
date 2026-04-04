@@ -1,14 +1,14 @@
 {
-  "name": "@overweo/weoline-linux-x64",
+  "name": "@overweo/weoline-linux-arm64",
   "version": "0.3.1",
-  "description": "weoline binary for Linux x64",
+  "description": "weoline binary for Linux ARM64 (aarch64)",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/OverWeo/weoline.git"
   },
   "os": ["linux"],
-  "cpu": ["x64"],
+  "cpu": ["arm64"],
   "preferUnplugged": true,
   "bin": {
     "weoline": "weoline"

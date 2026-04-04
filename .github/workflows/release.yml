@@ -21,18 +21,32 @@ jobs:
             os: macos-latest
             npm_pkg: weoline-darwin-arm64
             binary: weoline
+            cross: false
           - target: x86_64-apple-darwin
             os: macos-latest
             npm_pkg: weoline-darwin-x64
             binary: weoline
+            cross: false
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            npm_pkg: weoline-linux-arm64
+            binary: weoline
+            cross: true
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             npm_pkg: weoline-linux-x64
             binary: weoline
+            cross: false
+          - target: aarch64-pc-windows-msvc
+            os: windows-latest
+            npm_pkg: weoline-win32-arm64
+            binary: weoline.exe
+            cross: true
           - target: x86_64-pc-windows-msvc
             os: windows-latest
             npm_pkg: weoline-win32-x64
             binary: weoline.exe
+            cross: false
 
     runs-on: ${{ matrix.os }}
 
@@ -44,8 +58,41 @@ jobs:
           rustup toolchain install stable --profile minimal
           rustup target add ${{ matrix.target }}
 
+      - name: Install cross-compilation tools (Linux ARM64)
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: sudo apt-get update && sudo apt-get install -y crossbuild-essential-arm64
+
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: ${{ matrix.target == 'aarch64-unknown-linux-gnu' && 'aarch64-linux-gnu-gcc' || '' }}
+          CC_aarch64_unknown_linux_gnu: ${{ matrix.target == 'aarch64-unknown-linux-gnu' && 'aarch64-linux-gnu-gcc' || '' }}
+          CXX_aarch64_unknown_linux_gnu: ${{ matrix.target == 'aarch64-unknown-linux-gnu' && 'aarch64-linux-gnu-g++' || '' }}
+
+      # --- Testing (before any publishing) ---
+      - name: Run unit tests
+        if: ${{ !matrix.cross }}
+        run: cargo test --target ${{ matrix.target }}
+
+      - name: Smoke test — pipe JSON input
+        if: ${{ !matrix.cross }}
+        shell: bash
+        run: |
+          echo '{"context_window":{"used_percentage":45,"context_window_size":200000}}' | ./target/${{ matrix.target }}/release/${{ matrix.binary }}
+
+      - name: Smoke test — empty input (graceful)
+        if: ${{ !matrix.cross }}
+        shell: bash
+        run: |
+          echo '{}' | ./target/${{ matrix.target }}/release/${{ matrix.binary }}
+
+      - name: Smoke test — display modes
+        if: ${{ !matrix.cross }}
+        shell: bash
+        run: |
+          echo '{"context_window":{"used_percentage":45,"context_window_size":200000}}' | SL_MODE=compact ./target/${{ matrix.target }}/release/${{ matrix.binary }}
+          echo '{"context_window":{"used_percentage":45,"context_window_size":200000}}' | SL_MODE=minimal ./target/${{ matrix.target }}/release/${{ matrix.binary }}
+      # --- End testing ---
 
       - name: Prepare binary for upload
         shell: bash
@@ -71,8 +118,39 @@ jobs:
         shell: bash
         run: cp target/${{ matrix.target }}/release/${{ matrix.binary }} npm/${{ matrix.npm_pkg }}/
 
+      - name: Upload npm package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-${{ matrix.npm_pkg }}
+          path: npm/${{ matrix.npm_pkg }}/
+
+  publish-platform:
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+
+    strategy:
+      matrix:
+        npm_pkg:
+          - weoline-darwin-arm64
+          - weoline-darwin-x64
+          - weoline-linux-arm64
+          - weoline-linux-x64
+          - weoline-win32-arm64
+          - weoline-win32-x64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download platform artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: npm-${{ matrix.npm_pkg }}
+          path: npm/${{ matrix.npm_pkg }}/
+
       - name: Copy README to npm package
-        shell: bash
         run: cp README.md npm/${{ matrix.npm_pkg }}/
 
       - name: Setup Node.js
@@ -85,14 +163,8 @@ jobs:
         working-directory: npm/${{ matrix.npm_pkg }}
         run: npm publish --provenance --access public
 
-      - name: Upload npm package artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: npm-${{ matrix.npm_pkg }}
-          path: npm/${{ matrix.npm_pkg }}/
-
   publish-main:
-    needs: build
+    needs: publish-platform
     runs-on: ubuntu-latest
 
     permissions:

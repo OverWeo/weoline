@@ -1,6 +1,6 @@
 {
   "name": "@overweo/weoline-win32-x64",
-  "version": "0.2.2",
+  "version": "0.3.1",
   "description": "weoline binary for Windows x64",
   "license": "Apache-2.0",
   "repository": {
@@ -9,6 +9,7 @@
   },
   "os": ["win32"],
   "cpu": ["x64"],
+  "preferUnplugged": true,
   "bin": {
     "weoline": "weoline.exe"
   }
