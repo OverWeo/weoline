@@ -1,0 +1,16 @@
+{
+  "name": "weoline",
+  "version": "0.1.0",
+  "description": "Fast, cross-platform Claude Code statusline in Rust",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OverWeo/weoline.git"
+  },
+  "optionalDependencies": {
+    "@overweo/weoline-darwin-arm64": "0.1.0",
+    "@overweo/weoline-darwin-x64": "0.1.0",
+    "@overweo/weoline-linux-x64": "0.1.0",
+    "@overweo/weoline-win32-x64": "0.1.0"
+  }
+}
