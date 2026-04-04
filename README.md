@@ -131,24 +131,9 @@ Claude Code → stdin (JSON) → weoline → stdout (ANSI)
 - **Linux**: Uses rustls (no OpenSSL dependency). OAuth token from credentials file only.
 - **Windows**: Uses native-tls (SChannel). ANSI escape codes enabled via `SetConsoleMode`. `CREATE_NO_WINDOW` flag prevents console flash on background fetch spawn.
 
-## Publishing Guidelines (For Maintainers)
+## Publishing
 
-Releases are fully automated via GitHub Actions. **Never publish packages manually.**
-
-To cut a new release:
-
-1. Bump version in `Cargo.toml` and all `npm/**/package.json` files
-2. Commit the changes
-3. Tag and push:
-   ```bash
-   git tag v0.2.0
-   git push && git push --tags
-   ```
-
-GitHub Actions will automatically:
-- Compile platform-specific binaries (macOS ARM/x64, Linux x64, Windows x64)
-- Attach binaries to a GitHub Release (powers curl/Homebrew installs)
-- Publish zero-overhead platform packages to npm
+See [misc/PUBLISHING.md](misc/PUBLISHING.md) for release and publishing instructions.
 
 ## Testing
 
