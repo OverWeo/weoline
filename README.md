@@ -131,10 +131,6 @@ Claude Code → stdin (JSON) → weoline → stdout (ANSI)
 - **Linux**: Uses rustls (no OpenSSL dependency). OAuth token from credentials file only.
 - **Windows**: Uses native-tls (SChannel). ANSI escape codes enabled via `SetConsoleMode`. `CREATE_NO_WINDOW` flag prevents console flash on background fetch spawn.
 
-## Publishing
-
-See [misc/PUBLISHING.md](misc/PUBLISHING.md) for release and publishing instructions.
-
 ## Testing
 
 ```bash

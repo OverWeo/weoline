@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 env:
   CARGO_TERM_COLOR: always
@@ -70,17 +71,19 @@ jobs:
         shell: bash
         run: cp target/${{ matrix.target }}/release/${{ matrix.binary }} npm/${{ matrix.npm_pkg }}/
 
+      - name: Copy README to npm package
+        shell: bash
+        run: cp README.md npm/${{ matrix.npm_pkg }}/
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Publish platform npm package
         working-directory: npm/${{ matrix.npm_pkg }}
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Upload npm package artifact
         uses: actions/upload-artifact@v4
@@ -92,17 +95,21 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
 
+    permissions:
+      id-token: write
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           registry-url: 'https://registry.npmjs.org'
+
+      - name: Copy README to npm package
+        run: cp README.md npm/weoline/
 
       - name: Publish main npm package
         working-directory: npm/weoline
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
