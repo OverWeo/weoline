@@ -104,12 +104,12 @@ fn spawn_fetch() {
 
 #[cfg(windows)]
 fn enable_ansi() {
+    unsafe extern "system" {
+        fn GetStdHandle(nStdHandle: u32) -> isize;
+        fn GetConsoleMode(hConsoleHandle: isize, lpMode: *mut u32) -> i32;
+        fn SetConsoleMode(hConsoleHandle: isize, dwMode: u32) -> i32;
+    }
     unsafe {
-        extern "system" {
-            fn GetStdHandle(nStdHandle: u32) -> isize;
-            fn GetConsoleMode(hConsoleHandle: isize, lpMode: *mut u32) -> i32;
-            fn SetConsoleMode(hConsoleHandle: isize, dwMode: u32) -> i32;
-        }
         let handle = GetStdHandle(0xFFFF_FFF5); // STD_OUTPUT_HANDLE
         let mut mode: u32 = 0;
         if GetConsoleMode(handle, &mut mode) != 0 {
