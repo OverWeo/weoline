@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "weoline binary for macOS ARM64 (Apple Silicon)",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OverWeo/weoline.git"
+  },
   "os": ["darwin"],
   "cpu": ["arm64"],
   "bin": {

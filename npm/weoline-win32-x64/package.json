@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "weoline binary for Windows x64",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OverWeo/weoline.git"
+  },
   "os": ["win32"],
   "cpu": ["x64"],
   "bin": {
