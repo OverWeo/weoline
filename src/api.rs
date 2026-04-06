@@ -3,7 +3,7 @@ use std::fs;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::config::{Config, STALE_MULTIPLIER};
-use crate::types::{CacheData, UsageApiResponse};
+use crate::types::{CacheData, CacheReadError, UsageApiResponse};
 
 const API_URL: &str = "https://api.anthropic.com/api/oauth/usage";
 
@@ -17,7 +17,7 @@ pub fn poll_api(config: &Config) -> Result<(), Box<dyn Error>> {
         .header("Authorization", &format!("Bearer {}", token))
         .header("anthropic-beta", "oauth-2025-04-20")
         .call()
-        .map_err(|e| format!("API request failed: {e}"))?;
+        .map_err(|_| "API request failed")?;
 
     let body = resp
         .body_mut()
@@ -55,19 +55,20 @@ pub fn poll_api(config: &Config) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn read_cache(config: &Config) -> Option<CacheData> {
-    let data = fs::read(&config.cache_file).ok()?;
-    let resp: UsageApiResponse = serde_json::from_slice(&data).ok()?;
+pub fn read_cache(config: &Config) -> Result<CacheData, CacheReadError> {
+    let data = fs::read(&config.cache_file).map_err(|_| CacheReadError::NotFound)?;
+    let resp: UsageApiResponse =
+        serde_json::from_slice(&data).map_err(|_| CacheReadError::Corrupt)?;
 
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .ok()?
+        .map_err(|_| CacheReadError::Clock)?
         .as_secs();
     let fetched_at = resp.fetched_at;
     let age = now.saturating_sub(fetched_at.unwrap_or(0));
     let is_stale = age > config.refresh_interval * STALE_MULTIPLIER;
 
-    Some(CacheData {
+    Ok(CacheData {
         five_hour: resp.five_hour.unwrap_or_default(),
         seven_day: resp.seven_day.unwrap_or_default(),
         seven_day_sonnet: resp.seven_day_sonnet.unwrap_or_default(),

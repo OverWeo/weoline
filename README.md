@@ -75,8 +75,8 @@ Add to your Claude Code settings (`~/.claude/settings.json`):
 
 | Variant | Command | Includes | Binary Size |
 |---------|---------|----------|-------------|
-| **Full** (default) | `cargo build --release` | Context + tokens + cache + session + API rate limits + background fetch | ~773 KB (macOS) / ~1.3 MB (Linux) |
-| **Minimal** | `cargo build --release --no-default-features` | Context + tokens + cache + session only (from stdin) | ~500 KB |
+| **Full** (default) | `cargo build --release` | Context + tokens + cache + session + API rate limits + background fetch + query mode | ~789 KB (macOS) / ~1.3 MB (Linux) |
+| **Minimal** | `cargo build --release --no-default-features` | Context + tokens + cache + session only (from stdin) | ~345 KB |
 
 **Full** uses native-tls on macOS/Windows (OS TLS stack) and rustls on Linux (no OpenSSL dependency).
 
@@ -117,12 +117,77 @@ All settings are via `SL_*` environment variables, configurable in Claude Code's
 🧠 ██████░░░░░░░░ 45% (90k/200k)
 ```
 
+## Query Mode
+
+Query cached rate limit data programmatically — no stdin required.
+
+```bash
+weoline --query                              # toon, full detail, all buckets
+weoline --query --format json                # JSON, full detail, all buckets
+weoline --query -f json -d minimal           # JSON, just percentages
+weoline --query -f json --filter sonnet      # JSON, sonnet bucket only
+weoline --query --refresh --format json      # force fresh API fetch, then JSON
+```
+
+### Query Flags
+
+| Flag | Short | Values | Default | Description |
+|------|-------|--------|---------|-------------|
+| `--query` | `-q` | (presence) | off | Activate query mode |
+| `--format` | `-f` | `json`, `toon` | `toon` | Output format |
+| `--detail` | `-d` | `minimal`, `full` | `full` | Detail level |
+| `--filter` | | `all`, `sonnet`, `five-hour`, `seven-day` | `all` | Filter to specific bucket |
+| `--refresh` | `-r` | (presence) | off | Force fresh API fetch before query (blocking) |
+
+### JSON Output
+
+**Full detail** (`--format json`):
+```json
+{
+  "five_hour": {
+    "utilization": 24.0,
+    "resets_at": "2026-04-06T18:00:00+00:00",
+    "resets_in": "3h52m"
+  },
+  "seven_day": {
+    "utilization": 8.0,
+    "resets_at": "2026-04-10T00:00:00+00:00",
+    "resets_in": "3d0h"
+  },
+  "seven_day_sonnet": {
+    "utilization": 5.0,
+    "resets_at": "2026-04-10T00:00:00+00:00",
+    "resets_in": "3d0h"
+  },
+  "meta": {
+    "fetched_at": 1743955200,
+    "is_stale": false
+  }
+}
+```
+
+**Minimal detail** (`-f json -d minimal`):
+```json
+{
+  "five_hour_pct": 24.0,
+  "seven_day_pct": 8.0,
+  "seven_day_sonnet_pct": 5.0,
+  "is_stale": false
+}
+```
+
+> **Note:** `--refresh` performs a blocking HTTP request. Use it for explicit user invocations, not automated statusline hooks.
+
 ## How It Works
 
 ```
 Claude Code → stdin (JSON) → weoline → stdout (ANSI)
                                 ↓
                     Background: --fetch → API → cache file
+
+weoline --query → read cache → stdout (JSON/toon)
+         ↓ (--refresh)
+       API → cache file → read → stdout
 ```
 
 1. Claude Code pipes context window JSON to stdin
@@ -130,6 +195,7 @@ Claude Code → stdin (JSON) → weoline → stdout (ANSI)
 3. If the cache is stale, spawns a detached `weoline --fetch` subprocess
 4. The fetch subprocess acquires a file lock (OS-native via `fd-lock`), calls the Anthropic usage API, writes the cache atomically, and exits
 5. File lock is auto-released by the OS on process exit or crash
+6. Query mode (`--query`) reads the cache directly and outputs structured data (no stdin needed)
 
 ## Cross-Platform Notes
 
@@ -140,10 +206,13 @@ Claude Code → stdin (JSON) → weoline → stdout (ANSI)
 ## Testing
 
 ```bash
-# Run tests
+# Unit tests
 cargo test
 
-# Pipe test
+# Smoke tests (builds release, tests pipe/query/help/error modes)
+./tests/smoke-test.sh
+
+# Manual pipe tests
 echo '{"context_window":{"used_percentage":45,"context_window_size":200000}}' | ./target/release/weoline
 
 # Empty input (graceful)

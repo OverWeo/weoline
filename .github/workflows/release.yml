@@ -74,24 +74,19 @@ jobs:
         if: ${{ !matrix.cross }}
         run: cargo test --target ${{ matrix.target }}
 
-      - name: Smoke test — pipe JSON input
-        if: ${{ !matrix.cross }}
+      - name: Run smoke tests (Unix)
+        if: ${{ !matrix.cross && runner.os != 'Windows' }}
         shell: bash
-        run: |
-          echo '{"context_window":{"used_percentage":45,"context_window_size":200000}}' | ./target/${{ matrix.target }}/release/${{ matrix.binary }}
+        run: ./tests/smoke-test.sh
+        env:
+          WEOLINE_BIN: ./target/${{ matrix.target }}/release/${{ matrix.binary }}
 
-      - name: Smoke test — empty input (graceful)
-        if: ${{ !matrix.cross }}
-        shell: bash
-        run: |
-          echo '{}' | ./target/${{ matrix.target }}/release/${{ matrix.binary }}
-
-      - name: Smoke test — display modes
-        if: ${{ !matrix.cross }}
-        shell: bash
-        run: |
-          echo '{"context_window":{"used_percentage":45,"context_window_size":200000}}' | SL_MODE=compact ./target/${{ matrix.target }}/release/${{ matrix.binary }}
-          echo '{"context_window":{"used_percentage":45,"context_window_size":200000}}' | SL_MODE=minimal ./target/${{ matrix.target }}/release/${{ matrix.binary }}
+      - name: Run smoke tests (Windows)
+        if: ${{ !matrix.cross && runner.os == 'Windows' }}
+        shell: pwsh
+        run: .\tests\smoke-test.ps1
+        env:
+          WEOLINE_BIN: .\target\${{ matrix.target }}\release\${{ matrix.binary }}
       # --- End testing ---
 
       - name: Prepare binary for upload

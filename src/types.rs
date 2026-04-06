@@ -47,7 +47,7 @@ pub struct CacheData {
     pub is_stale: bool,
 }
 
-// -- API types (feature-gated) --
+// -- API + query types (feature-gated) --
 
 #[cfg(feature = "usage-tracking")]
 #[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
@@ -60,14 +60,64 @@ pub struct UsageApiResponse {
 }
 
 #[cfg(feature = "usage-tracking")]
-#[derive(Debug, serde::Deserialize)]
+pub enum CacheReadError {
+    NotFound,
+    Corrupt,
+    Clock,
+}
+
+#[cfg(feature = "usage-tracking")]
+#[derive(serde::Serialize)]
+pub struct QueryOutputFull {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub five_hour: Option<BucketOutput>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seven_day: Option<BucketOutput>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seven_day_sonnet: Option<BucketOutput>,
+    pub meta: QueryMeta,
+}
+
+#[cfg(feature = "usage-tracking")]
+#[derive(serde::Serialize)]
+pub struct BucketOutput {
+    pub utilization: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resets_at: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resets_in: Option<String>,
+}
+
+#[cfg(feature = "usage-tracking")]
+#[derive(serde::Serialize)]
+pub struct QueryMeta {
+    pub fetched_at: Option<u64>,
+    pub is_stale: bool,
+}
+
+#[cfg(feature = "usage-tracking")]
+#[derive(serde::Serialize)]
+pub struct QueryOutputMinimal {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub five_hour_pct: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seven_day_pct: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seven_day_sonnet_pct: Option<f64>,
+    pub is_stale: bool,
+}
+
+// -- Credential types (feature-gated) --
+
+#[cfg(feature = "usage-tracking")]
+#[derive(Debug, Deserialize)]
 pub struct CredentialsFile {
     #[serde(rename = "claudeAiOauth")]
     pub claude_ai_oauth: Option<OAuthData>,
 }
 
 #[cfg(feature = "usage-tracking")]
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct OAuthData {
     #[serde(rename = "accessToken")]
     pub access_token: Option<String>,
