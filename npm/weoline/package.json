@@ -1,6 +1,6 @@
 {
   "name": "weoline",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Fast, cross-platform Claude Code statusline in Rust",
   "license": "Apache-2.0",
   "repository": {
@@ -17,11 +17,11 @@
   "files": ["bin", "lib", "README.md"],
   "preferUnplugged": true,
   "optionalDependencies": {
-    "@overweo/weoline-darwin-arm64": "0.3.1",
-    "@overweo/weoline-darwin-x64": "0.3.1",
-    "@overweo/weoline-linux-arm64": "0.3.1",
-    "@overweo/weoline-linux-x64": "0.3.1",
-    "@overweo/weoline-win32-arm64": "0.3.1",
-    "@overweo/weoline-win32-x64": "0.3.1"
+    "@overweo/weoline-darwin-arm64": "0.4.0",
+    "@overweo/weoline-darwin-x64": "0.4.0",
+    "@overweo/weoline-linux-arm64": "0.4.0",
+    "@overweo/weoline-linux-x64": "0.4.0",
+    "@overweo/weoline-win32-arm64": "0.4.0",
+    "@overweo/weoline-win32-x64": "0.4.0"
   }
 }

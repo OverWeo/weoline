@@ -1,6 +1,6 @@
 {
   "name": "@overweo/weoline-linux-arm64",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "weoline binary for Linux ARM64 (aarch64)",
   "license": "Apache-2.0",
   "repository": {
