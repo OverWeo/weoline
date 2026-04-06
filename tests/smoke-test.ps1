@@ -53,6 +53,10 @@ Test-Case "help: shows env"   { $out -match "SL_MODE" }
 $out = & $BIN -h
 Test-Case "help: short flag" { $out -match "USAGE" }
 
+Test-Case "help: shows 5h timer env"     { $out -match "SL_SHOW_5H_TIMER" }
+Test-Case "help: shows weekly timer env"  { $out -match "SL_SHOW_WEEKLY_TIMER" }
+Test-Case "help: shows sonnet timer env"  { $out -match "SL_SHOW_SONNET_TIMER" }
+
 # --- Query Mode ---
 Write-Host ""
 Write-Host "=== Query Mode ==="
@@ -89,7 +93,11 @@ if ($hasCache) {
     Test-Case "query: toon has sonnet" { $out -match "sonnet:" }
 
     $out = (& $BIN --query -d minimal) -join "`n"
-    Test-Case "query: toon minimal has pct" { $out -match "5h:" }
+    Test-Case "query: toon minimal has pct"  { $out -match "5h:" }
+    Test-Case "query: toon minimal no timer" { $out -notmatch "↻" }
+
+    $out = (& $BIN --query -d full) -join "`n"
+    Test-Case "query: toon full has timer" { $out -match "↻" }
 } else {
     Write-Host "  SKIP  query tests (no cache data available)"
 }

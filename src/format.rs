@@ -43,9 +43,12 @@ pub fn format_countdown(resets_at: &str) -> String {
     if diff_sec <= 0 {
         return "now".to_string();
     }
-    let hours = diff_sec / 3600;
+    let days = diff_sec / 86400;
+    let hours = (diff_sec % 86400) / 3600;
     let mins = (diff_sec % 3600) / 60;
-    if hours > 0 {
+    if days > 0 {
+        format!("\u{21bb}{}d{}h", days, hours)
+    } else if hours > 0 {
         format!("\u{21bb}{}h{:02}m", hours, mins)
     } else {
         format!("\u{21bb}{}m", mins)
@@ -162,5 +165,17 @@ mod tests {
     fn test_format_countdown_empty() {
         assert_eq!(format_countdown(""), String::new());
         assert_eq!(format_countdown("invalid"), String::new());
+    }
+
+    #[test]
+    fn test_format_countdown_days() {
+        let result = format_countdown("2099-01-04T00:00:00+00:00");
+        assert!(result.contains('d'), "expected days in: {result}");
+        assert!(result.starts_with('\u{21bb}'));
+    }
+
+    #[test]
+    fn test_format_countdown_past() {
+        assert_eq!(format_countdown("2020-01-01T00:00:00+00:00"), "now");
     }
 }

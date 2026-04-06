@@ -172,24 +172,38 @@ fn render_toon(cache: &CacheData, args: &QueryArgs) -> String {
 
     if include_bucket(&args.filter, &Filter::SevenDay) {
         if let Some(pct) = cache.seven_day.utilization {
-            let s = if args.detail == DetailLevel::Full {
+            let mut s = if args.detail == DetailLevel::Full {
                 let color = get_percent_color(pct as u8);
                 format!("{color}\u{1f4c5} 7d: {pct}%{RST}")
             } else {
                 format!("7d: {pct}%")
             };
+            if args.detail == DetailLevel::Full {
+                if let Some(ref resets_at) = cache.seven_day.resets_at {
+                    if let Some(cd) = countdown_plain(resets_at) {
+                        s.push_str(&format!(" \u{21bb}{cd}"));
+                    }
+                }
+            }
             parts.push(s);
         }
     }
 
     if include_bucket(&args.filter, &Filter::Sonnet) {
         if let Some(pct) = cache.seven_day_sonnet.utilization {
-            let s = if args.detail == DetailLevel::Full {
+            let mut s = if args.detail == DetailLevel::Full {
                 let color = get_percent_color(pct as u8);
                 format!("{color}\u{1f3b5} sonnet: {pct}%{RST}")
             } else {
                 format!("sonnet: {pct}%")
             };
+            if args.detail == DetailLevel::Full {
+                if let Some(ref resets_at) = cache.seven_day_sonnet.resets_at {
+                    if let Some(cd) = countdown_plain(resets_at) {
+                        s.push_str(&format!(" \u{21bb}{cd}"));
+                    }
+                }
+            }
             parts.push(s);
         }
     }
@@ -400,5 +414,38 @@ mod tests {
 
         // Invalid
         assert_eq!(countdown_plain("bad"), None);
+    }
+
+    #[test]
+    fn test_render_toon_full_with_all_timers() {
+        let cache = make_cache();
+        let args = QueryArgs {
+            format: OutputFormat::Toon,
+            detail: DetailLevel::Full,
+            filter: Filter::All,
+            refresh: false,
+        };
+        let out = render_query(&cache, &args);
+        let arrow_count = out.matches('\u{21bb}').count();
+        assert_eq!(
+            arrow_count, 3,
+            "expected 3 countdown arrows, got {arrow_count} in: {out}"
+        );
+    }
+
+    #[test]
+    fn test_render_toon_minimal_no_timers() {
+        let cache = make_cache();
+        let args = QueryArgs {
+            format: OutputFormat::Toon,
+            detail: DetailLevel::Minimal,
+            filter: Filter::All,
+            refresh: false,
+        };
+        let out = render_query(&cache, &args);
+        assert!(
+            !out.contains('\u{21bb}'),
+            "minimal should have no countdowns: {out}"
+        );
     }
 }

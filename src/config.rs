@@ -15,6 +15,9 @@ pub struct Config {
     pub show_limits: bool,
     pub show_weekly: bool,
     pub show_sonnet: bool,
+    pub show_5h_timer: bool,
+    pub show_weekly_timer: bool,
+    pub show_sonnet_timer: bool,
     pub refresh_interval: u64,
     pub bar_width: usize,
     pub credentials_file: PathBuf,
@@ -40,6 +43,9 @@ impl Config {
             show_limits: std::env::var("SL_SHOW_LIMITS").as_deref() != Ok("0"),
             show_weekly: std::env::var("SL_SHOW_WEEKLY").as_deref() != Ok("0"),
             show_sonnet: std::env::var("SL_SHOW_SONNET").as_deref() != Ok("0"),
+            show_5h_timer: std::env::var("SL_SHOW_5H_TIMER").as_deref() != Ok("0"),
+            show_weekly_timer: std::env::var("SL_SHOW_WEEKLY_TIMER").as_deref() == Ok("1"),
+            show_sonnet_timer: std::env::var("SL_SHOW_SONNET_TIMER").as_deref() == Ok("1"),
             refresh_interval: std::env::var("SL_REFRESH_INTERVAL")
                 .ok()
                 .and_then(|v| v.parse().ok())
