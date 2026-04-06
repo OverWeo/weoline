@@ -47,7 +47,7 @@ out=$("$BIN" --version)
 contains "$out" "weoline"  && pass "version: shows name"    || fail "version: shows name"
 contains "$out" "0."       && pass "version: shows version"  || fail "version: shows version"
 
-out=$("$BIN" -v)
+out=$("$BIN" -V)
 contains "$out" "weoline"  && pass "version: short flag"     || fail "version: short flag"
 
 # --- Help ---

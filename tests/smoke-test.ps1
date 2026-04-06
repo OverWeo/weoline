@@ -49,7 +49,7 @@ $out = & $BIN --version
 Test-Case "version: shows name"    { $out -match "weoline" }
 Test-Case "version: shows version" { $out -match "0\." }
 
-$out = & $BIN -v
+$out = & $BIN -V
 Test-Case "version: short flag" { $out -match "weoline" }
 
 # --- Help ---

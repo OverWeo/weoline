@@ -35,7 +35,7 @@ fn main() {
         return;
     }
 
-    if args.iter().any(|a| a == "--version" || a == "-v") {
+    if args.iter().any(|a| a == "--version" || a == "-V") {
         println!("weoline {}", env!("CARGO_PKG_VERSION"));
         return;
     }
@@ -127,7 +127,7 @@ QUERY OPTIONS:
                                        Filter to specific bucket (default: all)
   -r, --refresh                        Force fresh API fetch before query
   -h, --help                           Print this help message
-  -v, --version                        Print version
+  -V, --version                        Print version
 
 EXAMPLES:
   weoline --query                      Toon output, full detail, all buckets
