@@ -138,6 +138,7 @@ weoline --query --refresh --format json      # force fresh API fetch, then JSON
 | `--detail` | `-d` | `minimal`, `full` | `full` | Detail level |
 | `--filter` | | `all`, `sonnet`, `five-hour`, `seven-day` | `all` | Filter to specific bucket |
 | `--refresh` | `-r` | (presence) | off | Force fresh API fetch before query (blocking) |
+| `--version` | `-V` | (presence) | off | Print version |
 
 ### JSON Output
 
