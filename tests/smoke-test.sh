@@ -39,6 +39,17 @@ is_empty "$out" && pass "pipe: empty input" || fail "pipe: empty input"
 out=$(echo 'not json' | SL_SHOW_LIMITS=0 "$BIN")
 is_empty "$out" && pass "pipe: invalid json" || fail "pipe: invalid json"
 
+# --- Version ---
+echo ""
+echo "=== Version ==="
+
+out=$("$BIN" --version)
+contains "$out" "weoline"  && pass "version: shows name"    || fail "version: shows name"
+contains "$out" "0."       && pass "version: shows version"  || fail "version: shows version"
+
+out=$("$BIN" -v)
+contains "$out" "weoline"  && pass "version: short flag"     || fail "version: short flag"
+
 # --- Help ---
 echo ""
 echo "=== Help ==="

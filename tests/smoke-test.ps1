@@ -41,6 +41,17 @@ Test-Case "pipe: empty input" { -not $out }
 $out = & { $env:SL_SHOW_LIMITS = "0"; 'not json' | & $BIN; Remove-Item Env:\SL_SHOW_LIMITS }
 Test-Case "pipe: invalid json" { -not $out }
 
+# --- Version ---
+Write-Host ""
+Write-Host "=== Version ==="
+
+$out = & $BIN --version
+Test-Case "version: shows name"    { $out -match "weoline" }
+Test-Case "version: shows version" { $out -match "0\." }
+
+$out = & $BIN -v
+Test-Case "version: short flag" { $out -match "weoline" }
+
 # --- Help ---
 Write-Host ""
 Write-Host "=== Help ==="
