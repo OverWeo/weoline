@@ -54,7 +54,7 @@ pub fn format_countdown(resets_at: &str) -> String {
 
 /// Parse ISO 8601 datetime string to epoch seconds.
 /// Handles: "2026-04-04T20:00:00.104774+00:00", "2026-04-04T20:00:00Z"
-fn iso8601_to_epoch_secs(s: &str) -> Option<i64> {
+pub(crate) fn iso8601_to_epoch_secs(s: &str) -> Option<i64> {
     if s.len() < 19 {
         return None;
     }
