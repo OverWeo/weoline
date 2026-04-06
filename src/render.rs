@@ -116,11 +116,13 @@ fn build_limits(cache: Option<&CacheData>, config: &Config) -> Option<String> {
         if h5.is_finite() && h5 >= 0.0 {
             let color = get_percent_color(h5 as u8);
             let mut s = format!("{color}\u{23f1} 5h: {h5}%{RST}");
-            if let Some(ref resets_at) = cache.five_hour.resets_at {
-                let cd = format_countdown(resets_at);
-                if !cd.is_empty() {
-                    s.push(' ');
-                    s.push_str(&cd);
+            if config.show_5h_timer {
+                if let Some(ref resets_at) = cache.five_hour.resets_at {
+                    let cd = format_countdown(resets_at);
+                    if !cd.is_empty() {
+                        s.push(' ');
+                        s.push_str(&cd);
+                    }
                 }
             }
             parts.push(s);
@@ -132,7 +134,17 @@ fn build_limits(cache: Option<&CacheData>, config: &Config) -> Option<String> {
         if let Some(d7) = cache.seven_day.utilization {
             if d7.is_finite() && d7 >= 0.0 {
                 let color = get_percent_color(d7 as u8);
-                parts.push(format!("{color}\u{1f4c5} 7d: {d7}%{RST}"));
+                let mut s = format!("{color}\u{1f4c5} 7d: {d7}%{RST}");
+                if config.show_weekly_timer {
+                    if let Some(ref resets_at) = cache.seven_day.resets_at {
+                        let cd = format_countdown(resets_at);
+                        if !cd.is_empty() {
+                            s.push(' ');
+                            s.push_str(&cd);
+                        }
+                    }
+                }
+                parts.push(s);
             }
         }
     }
@@ -142,7 +154,17 @@ fn build_limits(cache: Option<&CacheData>, config: &Config) -> Option<String> {
         if let Some(son) = cache.seven_day_sonnet.utilization {
             if son.is_finite() && son >= 0.0 {
                 let color = get_percent_color(son as u8);
-                parts.push(format!("{color}\u{1f3b5} sonnet: {son}%{RST}"));
+                let mut s = format!("{color}\u{1f3b5} sonnet: {son}%{RST}");
+                if config.show_sonnet_timer {
+                    if let Some(ref resets_at) = cache.seven_day_sonnet.resets_at {
+                        let cd = format_countdown(resets_at);
+                        if !cd.is_empty() {
+                            s.push(' ');
+                            s.push_str(&cd);
+                        }
+                    }
+                }
+                parts.push(s);
             }
         }
     }
@@ -172,6 +194,9 @@ mod tests {
             show_limits: true,
             show_weekly: true,
             show_sonnet: true,
+            show_5h_timer: true,
+            show_weekly_timer: false,
+            show_sonnet_timer: false,
             refresh_interval: 300,
             bar_width: 14,
             credentials_file: std::path::PathBuf::new(),
@@ -320,5 +345,129 @@ mod tests {
         };
         let output = render(&config, &input, Some(&cache));
         assert!(output.contains("\u{26a0}"));
+    }
+
+    fn make_input() -> StdinData {
+        StdinData {
+            context_window: ContextWindow {
+                used_percentage: Some(30.0),
+                context_window_size: Some(200_000),
+                ..Default::default()
+            },
+        }
+    }
+
+    #[test]
+    fn test_5h_timer_hidden_when_disabled() {
+        let mut config = default_config();
+        config.show_5h_timer = false;
+        let cache = CacheData {
+            five_hour: crate::types::RateBucket {
+                utilization: Some(42.0),
+                resets_at: Some("2099-01-01T03:52:00+00:00".to_string()),
+            },
+            seven_day: Default::default(),
+            seven_day_sonnet: Default::default(),
+            fetched_at: Some(0),
+            is_stale: false,
+        };
+        let output = render(&config, &make_input(), Some(&cache));
+        assert!(output.contains("5h: 42%"));
+        assert!(!output.contains('\u{21bb}'));
+    }
+
+    #[test]
+    fn test_5h_timer_shown_by_default() {
+        let mut config = default_config();
+        config.show_5h_timer = true;
+        let cache = CacheData {
+            five_hour: crate::types::RateBucket {
+                utilization: Some(42.0),
+                resets_at: Some("2099-01-01T03:52:00+00:00".to_string()),
+            },
+            seven_day: Default::default(),
+            seven_day_sonnet: Default::default(),
+            fetched_at: Some(0),
+            is_stale: false,
+        };
+        let output = render(&config, &make_input(), Some(&cache));
+        assert!(output.contains("5h: 42%"));
+        assert!(output.contains('\u{21bb}'));
+    }
+
+    #[test]
+    fn test_weekly_timer_hidden_by_default() {
+        let mut config = default_config();
+        config.show_weekly_timer = false;
+        let cache = CacheData {
+            five_hour: Default::default(),
+            seven_day: crate::types::RateBucket {
+                utilization: Some(15.0),
+                resets_at: Some("2099-01-04T00:00:00+00:00".to_string()),
+            },
+            seven_day_sonnet: Default::default(),
+            fetched_at: Some(0),
+            is_stale: false,
+        };
+        let output = render(&config, &make_input(), Some(&cache));
+        assert!(output.contains("7d: 15%"));
+        assert!(!output.contains('\u{21bb}'));
+    }
+
+    #[test]
+    fn test_weekly_timer_shown_when_enabled() {
+        let mut config = default_config();
+        config.show_weekly_timer = true;
+        let cache = CacheData {
+            five_hour: Default::default(),
+            seven_day: crate::types::RateBucket {
+                utilization: Some(15.0),
+                resets_at: Some("2099-01-04T00:00:00+00:00".to_string()),
+            },
+            seven_day_sonnet: Default::default(),
+            fetched_at: Some(0),
+            is_stale: false,
+        };
+        let output = render(&config, &make_input(), Some(&cache));
+        assert!(output.contains("7d: 15%"));
+        assert!(output.contains('\u{21bb}'));
+    }
+
+    #[test]
+    fn test_sonnet_timer_hidden_by_default() {
+        let mut config = default_config();
+        config.show_sonnet_timer = false;
+        let cache = CacheData {
+            five_hour: Default::default(),
+            seven_day: Default::default(),
+            seven_day_sonnet: crate::types::RateBucket {
+                utilization: Some(8.0),
+                resets_at: Some("2099-01-04T00:00:00+00:00".to_string()),
+            },
+            fetched_at: Some(0),
+            is_stale: false,
+        };
+        let output = render(&config, &make_input(), Some(&cache));
+        assert!(output.contains("sonnet: 8%"));
+        assert!(!output.contains('\u{21bb}'));
+    }
+
+    #[test]
+    fn test_sonnet_timer_shown_when_enabled() {
+        let mut config = default_config();
+        config.show_sonnet_timer = true;
+        let cache = CacheData {
+            five_hour: Default::default(),
+            seven_day: Default::default(),
+            seven_day_sonnet: crate::types::RateBucket {
+                utilization: Some(8.0),
+                resets_at: Some("2099-01-04T00:00:00+00:00".to_string()),
+            },
+            fetched_at: Some(0),
+            is_stale: false,
+        };
+        let output = render(&config, &make_input(), Some(&cache));
+        assert!(output.contains("sonnet: 8%"));
+        assert!(output.contains('\u{21bb}'));
     }
 }

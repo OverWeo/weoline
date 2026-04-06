@@ -136,6 +136,9 @@ ENVIRONMENT:
   SL_SHOW_LIMITS       Show rate limits: 1/0 (default: 1)
   SL_SHOW_WEEKLY       Show 7-day limit: 1/0 (default: 1)
   SL_SHOW_SONNET       Show Sonnet limit: 1/0 (default: 1)
+  SL_SHOW_5H_TIMER     Show 5h reset timer: 1/0 (default: 1)
+  SL_SHOW_WEEKLY_TIMER  Show 7-day reset timer: 1/0 (default: 0)
+  SL_SHOW_SONNET_TIMER  Show Sonnet reset timer: 1/0 (default: 0)
   SL_REFRESH_INTERVAL  Cache refresh interval in seconds (default: 300)
   SL_CACHE_FILE        Path to cache file (default: ~/.claude/usage-cache.json)"
     );

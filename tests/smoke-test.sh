@@ -51,6 +51,10 @@ contains "$out" "SL_MODE"  && pass "help: shows env"   || fail "help: shows env"
 out=$("$BIN" -h)
 contains "$out" "USAGE" && pass "help: short flag" || fail "help: short flag"
 
+contains "$out" "SL_SHOW_5H_TIMER"     && pass "help: shows 5h timer env"     || fail "help: shows 5h timer env"
+contains "$out" "SL_SHOW_WEEKLY_TIMER"  && pass "help: shows weekly timer env"  || fail "help: shows weekly timer env"
+contains "$out" "SL_SHOW_SONNET_TIMER"  && pass "help: shows sonnet timer env"  || fail "help: shows sonnet timer env"
+
 # --- Query Mode ---
 echo ""
 echo "=== Query Mode ==="
@@ -82,6 +86,10 @@ if "$BIN" --query -f json 2>/dev/null | head -1 | grep -q '{'; then
   out=$("$BIN" --query -d minimal)
   not_contains "$out" "⏱"  && pass "query: toon minimal no emoji" || fail "query: toon minimal no emoji"
   contains "$out" "5h:"    && pass "query: toon minimal has pct"  || fail "query: toon minimal has pct"
+  not_contains "$out" "↻"  && pass "query: toon minimal no timer" || fail "query: toon minimal no timer"
+
+  out=$("$BIN" --query -d full)
+  contains "$out" "↻"     && pass "query: toon full has timer"   || fail "query: toon full has timer"
 else
   echo "  SKIP  query tests (no cache data available)"
 fi
