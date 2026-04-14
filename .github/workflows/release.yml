@@ -100,6 +100,21 @@ jobs:
           fi
           echo "ARCHIVE=$ARCHIVE" >> "$GITHUB_ENV"
 
+      - name: Compute SHA256 for Homebrew formula
+        if: matrix.binary != 'weoline.exe'
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHA=$(shasum -a 256 dist/${{ env.ARCHIVE }} | awk '{print $1}')
+          echo "$SHA" > sha256-${{ matrix.target }}.txt
+
+      - name: Upload SHA256 artifact
+        if: matrix.binary != 'weoline.exe'
+        uses: actions/upload-artifact@v4
+        with:
+          name: sha256-${{ matrix.target }}
+          path: sha256-${{ matrix.target }}.txt
+
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -128,6 +143,108 @@ jobs:
         run: cargo publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  update-formula:
+    needs: build
+    runs-on: ubuntu-latest
+    concurrency:
+      group: update-formula
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout homebrew-tap
+        uses: actions/checkout@v4
+        with:
+          repository: OverWeo/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+      - name: Extract version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Download SHA256 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: sha256-*
+          merge-multiple: true
+          path: sha256s
+
+      - name: Write updated formula
+        run: |
+          set -euo pipefail
+          MACOS_ARM=$(cat sha256s/sha256-aarch64-apple-darwin.txt)
+          MACOS_X86=$(cat sha256s/sha256-x86_64-apple-darwin.txt)
+          LINUX_ARM=$(cat sha256s/sha256-aarch64-unknown-linux-gnu.txt)
+          LINUX_X86=$(cat sha256s/sha256-x86_64-unknown-linux-gnu.txt)
+          [ -n "$MACOS_ARM" ] || { echo "macOS ARM SHA empty";  exit 1; }
+          [ -n "$MACOS_X86" ] || { echo "macOS x86 SHA empty";  exit 1; }
+          [ -n "$LINUX_ARM" ] || { echo "Linux ARM SHA empty";  exit 1; }
+          [ -n "$LINUX_X86" ] || { echo "Linux x86 SHA empty";  exit 1; }
+          export MACOS_ARM MACOS_X86 LINUX_ARM LINUX_X86
+          python3 << 'PYEOF'
+          import os
+          version   = os.environ["VERSION"]
+          macos_arm = os.environ["MACOS_ARM"]
+          macos_x86 = os.environ["MACOS_X86"]
+          linux_arm = os.environ["LINUX_ARM"]
+          linux_x86 = os.environ["LINUX_X86"]
+          formula = (
+              'class Weoline < Formula\n'
+              '  desc "Fast, cross-platform terminal statusline for Claude Code"\n'
+              '  homepage "https://github.com/OverWeo/weoline"\n'
+              f'  version "{version}"\n'
+              '  license "Apache-2.0"\n'
+              '\n'
+              '  on_macos do\n'
+              '    on_arm do\n'
+              f'      url "https://github.com/OverWeo/weoline/releases/download/v{version}/weoline-aarch64-apple-darwin.tar.gz"\n'
+              f'      sha256 "{macos_arm}"\n'
+              '    end\n'
+              '\n'
+              '    on_intel do\n'
+              f'      url "https://github.com/OverWeo/weoline/releases/download/v{version}/weoline-x86_64-apple-darwin.tar.gz"\n'
+              f'      sha256 "{macos_x86}"\n'
+              '    end\n'
+              '  end\n'
+              '\n'
+              '  on_linux do\n'
+              '    on_arm do\n'
+              f'      url "https://github.com/OverWeo/weoline/releases/download/v{version}/weoline-aarch64-unknown-linux-gnu.tar.gz"\n'
+              f'      sha256 "{linux_arm}"\n'
+              '    end\n'
+              '\n'
+              '    on_intel do\n'
+              f'      url "https://github.com/OverWeo/weoline/releases/download/v{version}/weoline-x86_64-unknown-linux-gnu.tar.gz"\n'
+              f'      sha256 "{linux_x86}"\n'
+              '    end\n'
+              '  end\n'
+              '\n'
+              '  def install\n'
+              '    bin.install "weoline"\n'
+              '  end\n'
+              '\n'
+              '  test do\n'
+              '    assert_match version.to_s, shell_output("#{bin}/weoline --version")\n'
+              '  end\n'
+              'end\n'
+          )
+          import os as _os
+          _os.makedirs("Formula", exist_ok=True)
+          with open("Formula/weoline.rb", "w") as f:
+              f.write(formula)
+          print("Formula written.")
+          PYEOF
+
+      - name: Commit and push
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/weoline.rb
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "chore: update Homebrew formula to v${VERSION} [skip ci]"
+          git push origin ${{ github.event.repository.default_branch }}
 
   publish-platform:
     needs: build

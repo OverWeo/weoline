@@ -43,7 +43,7 @@ brew install overweo/tap/weoline
 For CI environments or users without package managers.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/OverWeo/weoline/main/misc/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/OverWeo/weoline/master/misc/install.sh | bash
 ```
 
 ### Build from Source
