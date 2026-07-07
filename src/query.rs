@@ -329,6 +329,7 @@ mod tests {
             detail: DetailLevel::Full,
             filter: Filter::All,
             refresh: false,
+            debug: false,
         };
         let out = render_query(&cache, &args);
         let v: serde_json::Value = serde_json::from_str(&out).unwrap();
@@ -346,6 +347,7 @@ mod tests {
             detail: DetailLevel::Minimal,
             filter: Filter::All,
             refresh: false,
+            debug: false,
         };
         let out = render_query(&cache, &args);
         let v: serde_json::Value = serde_json::from_str(&out).unwrap();
@@ -363,6 +365,7 @@ mod tests {
             detail: DetailLevel::Full,
             filter: Filter::Sonnet,
             refresh: false,
+            debug: false,
         };
         let out = render_query(&cache, &args);
         let v: serde_json::Value = serde_json::from_str(&out).unwrap();
@@ -379,6 +382,7 @@ mod tests {
             detail: DetailLevel::Full,
             filter: Filter::All,
             refresh: false,
+            debug: false,
         };
         let out = render_query(&cache, &args);
         assert!(out.contains("5h:"));
@@ -394,6 +398,7 @@ mod tests {
             detail: DetailLevel::Minimal,
             filter: Filter::All,
             refresh: false,
+            debug: false,
         };
         let out = render_query(&cache, &args);
         assert!(out.contains("5h: 24%"));
@@ -428,6 +433,7 @@ mod tests {
             detail: DetailLevel::Full,
             filter: Filter::All,
             refresh: false,
+            debug: false,
         };
         let out = render_query(&cache, &args);
         let arrow_count = out.matches('\u{21bb}').count();
@@ -445,6 +451,7 @@ mod tests {
             detail: DetailLevel::Minimal,
             filter: Filter::All,
             refresh: false,
+            debug: false,
         };
         let out = render_query(&cache, &args);
         assert!(
