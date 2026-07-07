@@ -7,9 +7,15 @@ use crate::types::{CacheData, CacheReadError, UsageApiResponse};
 
 const API_URL: &str = "https://api.anthropic.com/api/oauth/usage";
 
-pub fn poll_api(config: &Config) -> Result<(), Box<dyn Error>> {
-    let token = crate::oauth::get_oauth_token(&config.credentials_file)
-        .ok_or("no OAuth token available")?;
+pub fn poll_api(config: &Config, debug: bool) -> Result<(), Box<dyn Error>> {
+    let token = crate::oauth::get_oauth_token(&config.credentials_file);
+    if debug {
+        eprintln!(
+            "[debug] GET {API_URL} (oauth token: {})",
+            if token.is_some() { "found" } else { "MISSING" }
+        );
+    }
+    let token = token.ok_or("no OAuth token available")?;
 
     let agent = build_agent();
     let mut resp = agent
@@ -17,7 +23,29 @@ pub fn poll_api(config: &Config) -> Result<(), Box<dyn Error>> {
         .header("Authorization", &format!("Bearer {}", token))
         .header("anthropic-beta", "oauth-2025-04-20")
         .call()
-        .map_err(|_| "API request failed")?;
+        .map_err(|e| {
+            if debug {
+                format!("API request failed: {e:?}")
+            } else {
+                format!("API request failed: {e}")
+            }
+        })?;
+
+    let status = resp.status();
+    if debug {
+        eprintln!("[debug] HTTP {}", status.as_u16());
+    }
+    if !status.is_success() {
+        if debug {
+            let body = resp
+                .body_mut()
+                .read_to_string()
+                .unwrap_or_else(|e| format!("<failed to read body: {e}>"));
+            let body: String = body.chars().take(2048).collect();
+            return Err(format!("API request failed: HTTP {}: {body}", status.as_u16()).into());
+        }
+        return Err(format!("API request failed: HTTP {}", status.as_u16()).into());
+    }
 
     let body = resp
         .body_mut()
@@ -106,6 +134,7 @@ fn build_agent() -> ureq::Agent {
     ureq::Agent::config_builder()
         .tls_config(TlsConfig::builder().provider(tls_provider).build())
         .timeout_global(Some(std::time::Duration::from_secs(5)))
+        .http_status_as_error(false)
         .build()
         .new_agent()
 }

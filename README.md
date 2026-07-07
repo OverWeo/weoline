@@ -99,6 +99,7 @@ All settings are via `SL_*` environment variables, configurable in Claude Code's
 | `SL_BAR_WIDTH` | `14` | Progress bar width in characters |
 | `SL_CREDENTIALS_FILE` | `~/.claude/.credentials.json` | Path to OAuth credentials file |
 | `SL_CACHE_FILE` | `~/.claude/usage-cache.json` | Path to rate limit cache file |
+| `SL_DEBUG` | `0` | Verbose diagnostics on API failure (`1`/`true`): logs request URL, HTTP status, and response body |
 
 ## Display Modes
 
@@ -138,7 +139,21 @@ weoline --query --refresh --format json      # force fresh API fetch, then JSON
 | `--detail` | `-d` | `minimal`, `full` | `full` | Detail level |
 | `--filter` | | `all`, `sonnet`, `five-hour`, `seven-day` | `all` | Filter to specific bucket |
 | `--refresh` | `-r` | (presence) | off | Force fresh API fetch before query (blocking) |
+| `--debug` | `-D` | (presence) | off | On API failure, print request URL, HTTP status, and response body |
 | `--version` | `-V` | (presence) | off | Print version |
+
+### Diagnosing `--refresh` failures
+
+If `--refresh` fails, the error now names the failure kind instead of a generic message:
+
+```bash
+weoline --query --refresh -f json
+# error: API request failed: HTTP 403          # server rejected the token (e.g. plan/scope)
+# error: API request failed: timed out         # transport/network problem (VPN, DNS, TLS)
+# error: no OAuth token available              # credentials file missing/unreadable
+
+weoline --query --refresh -f json --debug      # (or SL_DEBUG=1) also prints the URL and response body
+```
 
 ### JSON Output
 

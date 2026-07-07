@@ -10,6 +10,7 @@ pub struct QueryArgs {
     pub detail: DetailLevel,
     pub filter: Filter,
     pub refresh: bool,
+    pub debug: bool,
 }
 
 #[derive(PartialEq)]
@@ -39,6 +40,7 @@ pub fn parse_query_args(args: &[String]) -> QueryArgs {
     let mut detail = DetailLevel::Full;
     let mut filter = Filter::All;
     let mut refresh = false;
+    let mut debug = false;
 
     let mut i = 0;
     while i < args.len() {
@@ -76,6 +78,7 @@ pub fn parse_query_args(args: &[String]) -> QueryArgs {
                 }
             }
             "--refresh" | "-r" => refresh = true,
+            "--debug" | "-D" => debug = true,
             _ => {}
         }
         i += 1;
@@ -86,6 +89,7 @@ pub fn parse_query_args(args: &[String]) -> QueryArgs {
         detail,
         filter,
         refresh,
+        debug,
     }
 }
 

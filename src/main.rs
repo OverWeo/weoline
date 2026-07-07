@@ -79,13 +79,9 @@ fn query_mode(args: &[String]) {
             eprintln!("error: another fetch is in progress");
             std::process::exit(1);
         };
-        if let Err(e) = api::poll_api(&config) {
-            let msg = e.to_string();
-            if msg.contains("token") || msg.contains("Bearer") {
-                eprintln!("error: API request failed");
-            } else {
-                eprintln!("error: {msg}");
-            }
+        let debug = qa.debug || debug_env();
+        if let Err(e) = api::poll_api(&config, debug) {
+            eprintln!("error: {e}");
             std::process::exit(1);
         }
     }
@@ -126,6 +122,8 @@ QUERY OPTIONS:
       --filter <all|sonnet|five-hour|seven-day>
                                        Filter to specific bucket (default: all)
   -r, --refresh                        Force fresh API fetch before query
+  -D, --debug                          Print request URL, HTTP status, and
+                                       response body on failure
   -h, --help                           Print this help message
   -V, --version                        Print version
 
@@ -146,7 +144,8 @@ ENVIRONMENT:
   SL_SHOW_WEEKLY_TIMER  Show 7-day reset timer: 1/0 (default: 0)
   SL_SHOW_SONNET_TIMER  Show Sonnet reset timer: 1/0 (default: 0)
   SL_REFRESH_INTERVAL  Cache refresh interval in seconds (default: 300)
-  SL_CACHE_FILE        Path to cache file (default: ~/.claude/usage-cache.json)"
+  SL_CACHE_FILE        Path to cache file (default: ~/.claude/usage-cache.json)
+  SL_DEBUG             Verbose diagnostics on API failure: 1/true (default: 0)"
     );
 }
 
@@ -177,7 +176,15 @@ fn fetch_mode() {
     let Some(_guard) = lock::try_acquire() else {
         return;
     };
-    let _ = api::poll_api(&config);
+    let _ = api::poll_api(&config, debug_env());
+}
+
+#[cfg(feature = "usage-tracking")]
+fn debug_env() -> bool {
+    matches!(
+        std::env::var("SL_DEBUG").as_deref(),
+        Ok("1") | Ok("true")
+    )
 }
 
 #[cfg(feature = "usage-tracking")]
