@@ -122,7 +122,7 @@ pub fn is_cache_stale(config: &Config) -> bool {
 }
 
 fn build_agent() -> ureq::Agent {
-    use ureq::tls::{TlsConfig, TlsProvider};
+    use ureq::tls::{RootCerts, TlsConfig, TlsProvider};
 
     let tls_provider = {
         #[cfg(any(target_os = "macos", target_os = "windows"))]
@@ -132,7 +132,14 @@ fn build_agent() -> ureq::Agent {
     };
 
     ureq::Agent::config_builder()
-        .tls_config(TlsConfig::builder().provider(tls_provider).build())
+        .tls_config(
+            TlsConfig::builder()
+                .provider(tls_provider)
+                // Use the OS trust store instead of ureq's bundled Mozilla roots,
+                // so corporate/VPN root CAs (TLS-intercepting proxies) are trusted.
+                .root_certs(RootCerts::PlatformVerifier)
+                .build(),
+        )
         .timeout_global(Some(std::time::Duration::from_secs(5)))
         .http_status_as_error(false)
         .build()

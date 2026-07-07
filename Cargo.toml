@@ -1,6 +1,6 @@
 [package]
 name = "weoline"
-version = "0.4.2"
+version = "0.4.3"
 edition = "2024"
 license = "Apache-2.0"
 description = "Fast, cross-platform Claude Code statusline in Rust"
@@ -32,12 +32,13 @@ optional = true
 default-features = false
 features = ["native-tls"]
 
-# Linux: Use rustls to avoid OpenSSL host dependency
+# Linux: Use rustls to avoid OpenSSL host dependency.
+# platform-verifier: validate against the OS trust store (picks up corporate/VPN root CAs).
 [target.'cfg(target_os = "linux")'.dependencies.ureq]
 version = "3"
 optional = true
 default-features = false
-features = ["rustls"]
+features = ["rustls", "platform-verifier"]
 
 [profile.release]
 opt-level = "z"
